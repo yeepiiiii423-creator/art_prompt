@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>畫圖靈感拉霸機 | Art Prompt Generator</title>
+  <style>
+    :root {
+      --bg-color: #ff7a18;
+      --card-bg: #1c1c1e;
+      --accent-color: #ff9f43;
+      --text-main: #f5f5f7;
+      --text-muted: #8e8e93;
+      --border-color: #3a3a3c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at center, #ff8c2b 0%, #e65c00 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      color: var(--text-main);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 580px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .header-badge {
+      background: #111;
+      border: 2px solid #222;
+      border-radius: 24px;
+      padding: 8px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    .machine-frame {
+      width: 100%;
+      background: #151517;
+      border: 4px solid #ffaa42;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+      position: relative;
+    }
+
+    .slots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .slot-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .slot-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #ffaa42;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .slot-window {
+      width: 100%;
+      height: 120px;
+      background: #000;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      text-align: center;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 6px 14px rgba(0, 0, 0, 0.8);
+    }
+
+    .slot-text {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #fff;
+      transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+    }
+
+    .slot-window.rolling .slot-text {
+      animation: blurRoll 0.08s infinite alternate;
+    }
+
+    @keyframes blurRoll {
+      from { transform: translateY(-4px); filter: blur(1px); opacity: 0.8; }
+      to { transform: translateY(4px); filter: blur(2px); opacity: 0.6; }
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      outline: none;
+      transition: all 0.15s ease;
+      font-weight: 700;
+    }
+
+    .btn-spin {
+      flex: 1;
+      padding: 16px;
+      background: #111;
+      color: #ffaa42;
+      border: 2px solid #ffaa42;
+      border-radius: 14px;
+      font-size: 18px;
+      letter-spacing: 2px;
+      box-shadow: 0 6px 0 #000;
+    }
+
+    .btn-spin:hover:not(:disabled) {
+      background: #222;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 0 #000;
+    }
+
+    .btn-spin:active:not(:disabled) {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 #000;
+    }
+
+    .btn-spin:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-manage {
+      padding: 0 16px;
+      background: #2a2a2e;
+      color: #fff;
+      border-radius: 14px;
+      font-size: 14px;
+      border: 1px solid #3e3e42;
+    }
+
+    .btn-manage:hover {
+      background: #3a3a40;
+    }
+
+    /* 詞庫管理面板 */
+    .manager-panel {
+      display: none;
+      width: 100%;
+      background: #1c1c1f;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 18px;
+      gap: 14px;
+      flex-direction: column;
+    }
+
+    .manager-panel.active {
+      display: flex;
+    }
+
+    .manager-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .manager-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #bbb;
+      margin-bottom: 6px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      background: #0d0d0e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #eee;
+      padding: 8px;
+      font-size: 13px;
+      resize: vertical;
+    }
+
+    .btn-save {
+      background: #ff9f43;
+      color: #000;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-badge">🎨 Daily Art Challenge</div>
+
+    <div class="machine-frame">
+      <div class="slots-grid">
+        <!-- 角色槽 -->
+        <div class="slot-column">
+          <span class="slot-title">Character / 角色</span>
+          <div class="slot-window" id="window-char">
+            <div class="slot-text" id="text-char">點擊下方抽卡</div>
+          </div>
+        </div>
+
+        <!-- 主題風格槽 -->
+        <div class="slot-column">
+          <span class="slot-title">Theme / 主題風格</span>
+          <div class="slot-window" id="window-theme">
+            <div class="slot-text" id="text-theme">點擊下方抽卡</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 控制按鈕 -->
+    <div class="controls">
+      <button class="btn-spin" id="spinBtn" onclick="spin()">SPIN / 抽題</button>
+      <button class="btn-manage" onclick="toggleManager()">自訂詞庫</button>
+    </div>
+
+    <!-- 詞庫編輯抽屜 -->
+    <div class="manager-panel" id="managerPanel">
+      <div class="manager-columns">
+        <div class="manager-field">
+          <label>角色清單（每行一個）</label>
+          <textarea id="customChars"></textarea>
+        </div>
+        <div class="manager-field">
+          <label>主題風格（每行一個）</label>
+          <textarea id="customThemes"></textarea>
+        </div>
+      </div>
+      <button class="btn-save" onclick="saveCustomPools()">儲存詞庫設定</button>
+    </div>
+  </div>
+
+  <script>
+    // 預設詞庫
+    const defaultCharacters = [
+      "賽博龐克偵探", "森林精靈旅人", "機甲戰士", "無頭騎士",
+      "幽靈咖啡師", "廢土流浪者", "深海人魚巫師", "蒸氣龐克發明家",
+      "吸血鬼貴族", "貓咪特務", "墮落天使", "古代陶俑魔像"
+    ];
+
+    const defaultThemes = [
+      "90年代復古廣告", "蒸氣波 (Vaporwave)", "暗黑哥德風",
+      "高飽和街頭塗鴉", "電影概念分鏡", "卡牌遊戲立繪",
+      "極簡扁平插畫", "吉卜力溫暖手繪風", "像素點陣藝術",
+      "未來科技 UI 界面", "微縮模型透視景", "黑白浮世繪"
+    ];
+
+    // 本地快取讀取
+    let characters = JSON.parse(localStorage.getItem('art_chars')) || defaultCharacters;
+    let themes = JSON.parse(localStorage.getItem('art_themes')) || defaultThemes;
+
+    const charWindow = document.getElementById('window-char');
+    const themeWindow = document.getElementById('window-theme');
+    const charText = document.getElementById('text-char');
+    const themeText = document.getElementById('text-theme');
+    const spinBtn = document.getElementById('spinBtn');
+
+    function getRandomItem(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function spin() {
+      if (characters.length === 0 || themes.length === 0) {
+        alert("請至少在詞庫中保留一個角色與一個風格！");
+        return;
+      }
+
+      spinBtn.disabled = true;
+      charWindow.classList.add('rolling');
+      themeWindow.classList.add('rolling');
+
+      // 模擬滾動隨機刷新文字
+      let counter = 0;
+      const interval = setInterval(() => {
+        charText.innerText = getRandomItem(characters);
+        themeText.innerText = getRandomItem(themes);
+        counter++;
+      }, 70);
+
+      // 1.2 秒後定格最終結果
+      setTimeout(() => {
+        clearInterval(interval);
+        charWindow.classList.remove('rolling');
+        themeWindow.classList.remove('rolling');
+
+        charText.innerText = getRandomItem(characters);
+        themeText.innerText = getRandomItem(themes);
+
+        spinBtn.disabled = false;
+      }, 1200);
+    }
+
+    function toggleManager() {
+      const panel = document.getElementById('managerPanel');
+      panel.classList.toggle('active');
+      if (panel.classList.contains('active')) {
+        document.getElementById('customChars').value = characters.join('\n');
+        document.getElementById('customThemes').value = themes.join('\n');
+      }
+    }
+
+    function saveCustomPools() {
+      const charVal = document.getElementById('customChars').value.trim();
+      const themeVal = document.getElementById('customThemes').value.trim();
+
+      characters = charVal ? charVal.split('\n').map(s => s.trim()).filter(Boolean) : [];
+      themes = themeVal ? themeVal.split('\n').map(s => s.trim()).filter(Boolean) : [];
+
+      localStorage.setItem('art_chars', JSON.stringify(characters));
+      localStorage.setItem('art_themes', JSON.stringify(themes));
+
+      alert('詞庫已更新！');
+      toggleManager();
+    }
+  </script>
+</body>
+</html>
